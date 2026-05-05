@@ -73,9 +73,99 @@ determine safe regions in which the arm may operate without collisions.
 
 \section{Problem Statement}
 
+Given \( n \) unit circles \( C_i \) centered at \( \myvector{c}_i = (x_i, y_i) \) for \( i = \overline{1,n} \), our objective is to compute the maximum envelope function \( f(x) \) representing the upper boundary of their union:
+\begin{equation*}
+	f(x) = \max_{|x - x_i| \leq 1, \; i \in \overline{1,n}} \left( y_i + \sqrt{1 - (x - x_i)^2} \right).
+\end{equation*}
+This function identifies the highest point among the circles at any horizontal position \( x \), as illustrated in Figure~\ref{fig:unit_circles}.
+
+\begin{figure} [htb]
+	\centering
+	\includegraphics[scale=1.0]{figures/example_with_unused_and_lower_circle.png}
+	\caption
+	{
+		Visualization of the upper boundary of unit circles. The circles are shown as blue and red arcs, with the red arcs forming the upper boundary, which defines the highest points along the \(y\)-axis.
+	}
+	\label{fig:unit_circles}
+\end{figure}
+
+Circles whose centers are separated by a horizontal distance of at least twice the radius (i.e., two units for unit circles) do not intersect and can be processed independently. Furthermore, if multiple circles have the same horizontal coordinate \( x_i \), only the circle with the highest vertical coordinate \( y_i \) contributes to the upper boundary.
+
 \section{Algorithm Description}
 
+The algorithm constructs the upper boundary by iteratively processing the circles. The resultant upper boundary is a piecewise curve composed of circular arcs. We group these arcs into \emph{segments}, where each segment is a horizontally continuous portion of the boundary. In other words, the upper boundary can be viewed as an ordered list of segments, with each segment separated horizontally.
+
+Within each segment, the arcs are determined by the relationships between consecutive circles. To handle these relationships efficiently, the algorithm maintains a sequence of circles along with their corresponding horizontal transition positions. This sequence defines a single segment of the boundary. As the algorithm proceeds, it finalizes segments whenever it encounters a horizontal gap and then starts a new segment. To summarize, there are three cases for how the arcs form the boundary (two of which cause discontinuities—gaps and overshadowing):
+\begin{itemize}
+	\item When arcs are directly connected, meaning one arc ends where the next begins without any gap
+	\item When one circle overshadows another within the same horizontal span, defining the upper boundary without introducing a horizontal gap, while the arcs remain in the same segment
+	\item When the arcs are horizontally separated and therefore form distinct segments
+\end{itemize}
+
+The algorithm consists of the following steps:
+
+\begin{enumerate}
+	\item Sort the circles in ascending order based on their \( x_i \) coordinates.
+	
+	\item For each unique \( x_i \) coordinate, retain only the circle with the highest \( y_i \) coordinate and discard the others.
+	
+	\item Initialize an empty list of segments.
+	
+	\item Iterate through each circle \( C_i \) in the sorted list:
+	\begin{enumerate}[label=(\alph*), ref=\theenumi(\alph*)]
+		\item If there are no segments, create a new segment, add \( C_i \) to it, and proceed to the next circle.
+		
+		\item Determine the horizontal transition position between the last circle, \( C_j \), in the last segment and \( C_i \) using the method described in~\secrefplain{sec:horizontal_transition_position}.
+		
+		\item If the circles do not overlap (i.e., there is a horizontal gap), then create a new segment, add \( C_i \) to it, and proceed to the next circle.
+		
+		\item \label{AlgorithmRepeat} If the current segment has horizontal transition positions and the last horizontal transition position is more than or equal to the computed horizontal transition position \( x_u \):
+		
+		\begin{enumerate}[label=(\roman*)]
+			\item Remove \( C_j \) and the last horizontal transition position from the current segment. Set \( C_j \) to be the circle currently at the end of the segment.
+			
+			\item Recompute the transition position between the segment's new last circle, \( C_j \), and \( C_i \). If~no intersection is found (which can happen due to floating-point roundoff errors), use the midpoint of their centers' \( x \) coordinates as the transition position.
+			
+			\item Repeat step~\ref{AlgorithmRepeat}.
+		\end{enumerate}
+		
+		\item Otherwise, add the horizontal transition position \( x_u \) and \( C_i \) to the current segment.
+	\end{enumerate}
+\end{enumerate}
+
 \section{Proof of Algorithm Correctness}
+
+\subsection*{Uniqueness of Horizontal Transition}
+
+\textbf{Lemma 1:} \emph{For any two unit circles \( C_j \) and \( C_i \) with centers \( \myvector{c}_j = (x_j, y_j) \) and \( \myvector{c}_i = (x_i, y_i) \) such that \( x_j < x_i \) and \( x_i - x_j < 2 \), there exists only one horizontal position \( x_u \) where the upper extremal boundaries of the circles transition from one circle to the other.}
+
+\textbf{Proof of Lemma 1:}
+
+For each unit circle, we only need to consider the upper half of the circle as it shadows the lower half. There are two cases to consider: when the upper halves of the unit circles intersect and when they do not intersect.
+
+First, consider the case where the upper halves intersect. They can have at most one intersection point~\( x_u \). Suppose, for the sake of contradiction, that there are multiple intersection points. Due to symmetry about the midpoint between the centers of the circles, there would also be multiple intersections between the lower halves of the circles. This would result in more than two intersection points between the circles overall, which is impossible for circles. Therefore, only one intersection between the upper halves is possible, leading to \( C_j \)'s influence on the upper extremal boundary transitioning to \( C_i \) at the horizontal position \( x_u \).
+
+Next, consider the case where the upper halves do not intersect. In this scenario, the domain overlap is only \( [x_i - 1, x_j + 1] \). Therefore, there can be only one horizontal transition. If \( y_j < y_i \), the transition occurs at \( x_i - 1 \); otherwise, it occurs at \( x_j + 1 \).
+
+\subsection*{Correctness of the Algorithm}
+
+Proving correctness for each segment (a horizontally continuous portion of the boundary) suffices to establish the correctness of the overall algorithm. Thus, in the proof we assume that every added circle has a transition point with its predecessor.
+
+\textbf{Inductive Proof:} We prove the correctness by induction on the number of circles processed.
+
+\textbf{Base Case:} With only one circle \( C_1 \), there is no ambiguity about the upper boundary.
+
+\textbf{Inductive Step:} Assume that after processing \( k \) circles, the algorithm correctly represents the upper boundary. Now, consider adding the next circle, \( C_{k+1} \), increasing the total number of processed circles to~\( k+1 \).
+
+The algorithm identifies the horizontal transition point \( x_u \) between \( C_{k+1} \) and the last circle, \( C_j \), currently in the sequence. By Lemma 1, only one such transition point exists. Two cases arise:
+
+\begin{enumerate}
+	\item \textbf{No Removals:} If the computed \( x_u \) exceeds the last recorded transition position in the sequence, then \( C_{k+1} \) contributes a new, higher portion of the boundary beyond \( x_u \). In other words, \( C_{k+1} \) is effectively extending the upper boundary further to the right. Since it is placed after all previously processed circles without displacing any of them, it must be higher than the current boundary beyond \( x_u \). Hence, adding \( C_{k+1} \) along with \( x_u \) maintains a correct and updated representation of the upper boundary.
+
+	\item \textbf{Removal of Overshadowed Circles:} If \( x_u \) is less than or equal to the last recorded transition position, it indicates that \( C_{k+1} \) overshadows the previously last circle \( C_j \) in the current upper boundary. To maintain correctness, the algorithm removes \( C_j \) and the last transition position from the sequence and checks again with the preceding circle. By iteratively doing so, it eliminates any circle whose contribution no longer defines the highest reachable boundary segment once \( C_{k+1} \) is considered. Ultimately, when the removal process ceases, \( C_{k+1} \) is added along with a valid transition position that correctly reflects the new contributor to the upper boundary beyond that point.
+\end{enumerate}
+
+Through this inductive argument, we conclude that each step preserves correctness. Therefore, by induction, the entire algorithm correctly computes the upper boundary of the union of circles.
 
 \section{Complexity Analysis}
 
