@@ -169,9 +169,39 @@ Through this inductive argument, we conclude that each step preserves correctnes
 
 \section{Complexity Analysis}
 
+The algorithm operates in two primary phases: sorting and processing.
+
+\begin{itemize}
+	\item \textbf{Sorting}: Sorting the \(n\) circles has \(O(n \log n)\) complexity.\cite{Knuth}
+	
+	\item \textbf{Processing}: Iterating through the sorted list and maintaining the current sequence of contributing circles has linear complexity, \(O(n)\),  because each circle is added to and potentially removed from the current sequence only once.
+\end{itemize}
+
+Consequently, the overall time complexity of the algorithm is \(O(n \log n)\).
+
 \section{Binary Search for Finding the Upper Value}
 
+In the final boundary representation, each segment corresponds to a sequence of circles. For a given segment, let \(x_{\mathrm{left}}\) and \(x_{\mathrm{right}}\) be, respectively, the smallest and largest \(x\) coordinates of the circle centers. The segment's horizontal domain is then \(\left( x_{\mathrm{left}}-1,\; x_{\mathrm{right}}+1 \right)\).\newline
+
+To evaluate the upper boundary at specific horizontal position \(x\), proceed as follows:
+\begin{enumerate}
+	\item Perform a binary search across all segments to find one whose domain contains \(x\).
+	\item Determine whether there is a segment containing \(x\). If no segment's domain contains \(x\), the upper boundary does not exist at that position; otherwise, proceed to the next step.
+	\item Within the segment, perform a binary search on the segment's transition positions to identify the specific circle \(C_i\) that defines the boundary at \(x\).
+	\item Compute the \(y\) coordinate using the circle's equation:
+	\[
+	y =
+	\begin{cases}
+		y_i + \sqrt{1 - (x - x_i)^2}, & \text{if } \lvert x - x_i \rvert < 1;\\
+		y_i, & \text{otherwise}.
+	\end{cases}
+	\]
+	Note that the case when $ 1 < \lvert x - x_i \rvert $ can potentially occur due to roundoff error.
+\end{enumerate}
+	
 \section{Conclusion}
+
+In this paper, we introduced an efficient algorithm for computing the directional extremal boundary of a union of equal-radius circles.\footnote{While the algorithm is presented for equal-radius circles, its core ideas can be adapted to handle ellipses that are of equal size and aligned with the specified direction.} The proposed method runs in \(O(n \log n)\) time complexity by sorting the circle centers and incrementally constructing the upper boundary. Although the sorting step can be parallelized in a straightforward manner, the described boundary-processing step is currently sequential. Nonetheless, a parallel implementation remains feasible by recursively merging partially constructed solutions derived from individual circles. In this merging phase, the transition positions from both solutions are processed in a manner analogous to the sequential insertion of a new circle, ensuring that the merged solution is maintained correctly while leveraging the divide-and-conquer paradigm~\cite{Knuth}. It is important to note that the parallel implementation does not result in a segmentation of the final solution.
 
 \section*{Acknowledgments}
 
