@@ -1,0 +1,32 @@
+name: Check LaTeX
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-extra texlive-fonts-recommended latexmk
+
+      - name: Check required files
+        run: |
+          test -f main.tex
+          test -f sbc-template.sty
+          test -d figures
+
+      - name: Compile main.tex
+        run: |
+          latexmk -pdf -halt-on-error -interaction=nonstopmode main.tex
+
+      - name: Check generated PDF
+        run: |
+          test -f main.pdf
