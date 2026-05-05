@@ -166,7 +166,7 @@ The algorithm identifies the horizontal transition point \( x_u \) between \( C_
 \end{enumerate}
 
 Through this inductive argument, we conclude that each step preserves correctness. Therefore, by induction, the entire algorithm correctly computes the upper boundary of the union of circles.
-
+	
 \section{Complexity Analysis}
 
 The algorithm operates in two primary phases: sorting and processing.
@@ -205,7 +205,76 @@ In this paper, we introduced an efficient algorithm for computing the directiona
 
 \section*{Acknowledgments}
 
+The author would like to thank Lois Stuart for copy editing this paper; Manoj Lnu, principal software engineer on the ArcGIS $3$D Analyst team at Esri; and Sergey Tolstov, senior principal software development engineer on the geometry team at Esri, for providing valuable suggestions to help improve this paper as well as identifying potential areas of application.
+
+ChatGPT was used to assist with proofreading and figure generation, supporting text refinement and enhancing the visual presentation.\cite{openaichatgpt}
+
 \section*{Appendix: Horizontal Transition Position of Two Unit Circles}
+\label{sec:horizontal_transition_position}
+
+Consider the two unit circles \( C_j \) and \( C_i \) with centers at \( \myvector{c}_j = (x_j, y_j) \) and \( \myvector{c}_i = (x_i, y_i) \), respectively, where we assume \( x_j < x_i \), as shown in Figure~\ref{fig:intersection_two_circles}.
+
+\begin{figure}[htb]
+	\centering
+	\begin{minipage}{0.45\textwidth}
+		\begin{overpic}[scale=0.7]{figures/intersection_two_circles.png}
+			\put(10,10){\textbf{\ref*{item:IntersectionOfTwoCirclesA}}}
+		\end{overpic}
+	\end{minipage}
+	\hspace{0.05\textwidth}
+	\begin{minipage}{0.45\textwidth}
+		\begin{overpic}[scale=0.7]{figures/intersection_two_circles_shadow.png}
+			\put(10,10){\textbf{\ref*{item:IntersectionOfTwoCirclesB}}}
+		\end{overpic}
+	\end{minipage}
+	\caption[]
+	{
+		Comparison of the upper boundaries of two unit circles.
+		\begin{enumerate*}[label=(\textit{\Alph*}), ref=\textit{\Alph*}]
+			\item \label{item:IntersectionOfTwoCirclesA} Intersecting circles with a continuous upper boundary.
+			\item \label{item:IntersectionOfTwoCirclesB} A discontinuity (in orange) when one circle overshadows the other.
+		\end{enumerate*}
+	}
+	\label{fig:intersection_two_circles}
+\end{figure}
+
+If \( x_j + 2 \leq x_i \), the circles do not overlap horizontally. Even the edge case \( x_j + 2 = x_i \) indicates tangential contact, treated here as nonintersecting.
+
+Compute the distance between the centers:
+\begin{equation*}
+	d = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}.
+\end{equation*}
+
+If the circles intersect and their centers are not too close (i.e., \( \epsilon < d < 2 \), where \( \epsilon \) is a small positive number accounting for floating-point precision), we calculate their upper intersection point \( (x_u, y_u) \) as follows:
+
+\begin{itemize}
+	\item Compute the midpoint between the centers:
+	\begin{equation*}
+		\myvector{p}_m = \frac{1}{2} \left( \myvector{c}_j + \myvector{c}_i \right).
+	\end{equation*}
+	\item Compute the unit vector \( \myvector{p}_n \) perpendicular to the line connecting the centers and pointing upright:
+	\begin{equation*}
+		\myvector{p}_n = \frac{1}{d} \left( - (y_i - y_j),\ x_i - x_j \right).
+	\end{equation*}
+	\item Calculate the distance \( h \) from the midpoint to the intersection points:
+	\begin{equation*}
+		h = \sqrt{1 - \left( \frac{d}{2} \right)^2 }.
+	\end{equation*}
+	\item Compute the upper intersection point:
+	\begin{equation*}
+		\myvector{p}_u = \myvector{p}_m + h \cdot \myvector{p}_n,
+	\end{equation*}
+	where \( \myvector{p}_u = (x_u, y_u) \).
+\end{itemize}
+
+If \( \max(y_j, y_i) < y_u \) (see Figure~\ref{fig:intersection_two_circles}\ref*{item:IntersectionOfTwoCirclesA}), then the horizontal transition position is \( x_u \). 
+Otherwise, referring to Figure~\ref{fig:intersection_two_circles}\ref*{item:IntersectionOfTwoCirclesB}, the horizontal transition position is determined by:
+\begin{equation*}
+	\begin{cases} 
+		x_i - 1, & \text{if } y_j < y_i, \\ 
+		x_j + 1, & \text{otherwise}.
+	\end{cases}
+\end{equation*}
 
 \bibliographystyle{sbc}
 \bibliography{sbc-template}
