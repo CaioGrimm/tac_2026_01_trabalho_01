@@ -24,16 +24,68 @@
 \title{Efficient Computation of the Directional Extremal Boundary\\
 of a Union of Equal-Radius Circles}
 
-\author{Alexander Gribov}
+\author{Caio Grimm}
 
-\address{Esri, 380 New York Street, Redlands, CA 92373-8100, USA\\
-\email{agribov@esri.com}}
+\address{Instituto de Computação - UFAM\\
+\email{caiogrimm@gmail.com}}
 
 \begin{document}
 	
 \maketitle
 
+\begin{abstract}
+This paper focuses on computing the directional extremal boundary
+of a union of equal-radius circles. We introduce an efficient algorithm
+that accurately determines this boundary by analyzing the intersections and
+dominant relationships among the circles. The algorithm has time complexity
+of $O(n \log n)$.
+\end{abstract}
 
+\section{Introduction}
+Computing the directional extremal boundary of a union of equal-radius circles involves
+identifying the outermost points in a specified direction that form the outer edge of the
+combined circle regions. This task is essential in a wide range of applications where each
+circle may represent a measurement, area of influence, or coverage zone.
+
+Without loss of generality, this paper focuses on computing the upper boundary of
+the union of unit circles, as this can be readily extended to circles of any equal radius by
+applying uniform scaling and rotation. In this paper, we present an efficient algorithm for
+determining the upper boundary of overlapping unit circles. The method begins by sorting
+all circle centers according to their horizontal positions. Once sorted, the circles are
+processed from left to right to build the boundary incrementally, accounting for overlaps
+and overshadowing. Specifically, it identifies the exact horizontal positions where one
+circle's boundary overtakes or merges into another's. By maintaining a dynamic list of
+circles that currently define the boundary, the algorithm eliminates any circles that no
+longer contribute to the highest points, thereby preserving only those that shape the overall
+upper boundary.
+
+One practical application of this algorithm is the precise localization of extremal
+points along elongated structures such as rail tracks or pipelines. In such cases, each
+circle may represent a measurement along the structure, and computing the circles'
+directional extremal boundary enables accurate identification of the outermost positions
+in the specified direction.
+
+Another application arises in robotic workspace modeling, where a robotic arm
+moves along rails in one direction and extends in another. Here, circles can represent
+obstacles and safety zones: the circle centers reflect object positions, while radii model
+object sizes, arm dimensions, and required safety distances. The algorithm can then
+determine safe regions in which the arm may operate without collisions.
+
+\section{Problem Statement}
+
+\section{Algorithm Description}
+
+\section{Proof of Algorithm Correctness}
+
+\section{Complexity Analysis}
+
+\section{Binary Search for Finding the Upper Value}
+
+\section{Conclusion}
+
+\section*{Acknowledgments}
+
+\section*{Appendix: Horizontal Transition Position of Two Unit Circles}
 
 \bibliographystyle{sbc}
 \bibliography{sbc-template}
